@@ -179,8 +179,8 @@ sudo dnf install -y python39 python39-devel
 
 # Instalar conversor html a pdf
 sudo mkdir -p /opt/odoo/
-sudo wget -P /opt/odoo https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.almalinux8.x86_64.rpm
-sudo dnf localinstall -y /opt/odoo/wkhtmltox-0.12.6.1-2.almalinux8.x86_64.rpm
+sudo wget -P /opt/odoo https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
+sudo dnf localinstall -y /opt/odoo/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
 
 # Instalar PostgreSQL
 
