@@ -176,8 +176,8 @@ sudo systemctl start nginx
 # Instalar Odoo
 sudo dnf install -y git gcc wget nodejs libxslt-devel bzip2-devel openldap-devel libjpeg-devel freetype-devel postgresql-libs postgresql-devel gcc-c++ epel-release
 sudo dnf install -y python39 python39-devel
-sudo dnf install python3-devel
-sudo yum install libsasl2-devel openldap-devel
+sudo dnf install python3-devel -y
+sudo yum install libsasl2-devel openldap-devel -y
 
 # Instalar conversor html a pdf
 sudo mkdir -p /opt/odoo/
