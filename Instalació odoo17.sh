@@ -3,7 +3,9 @@
 #
 ## SCRIPT HECHO POR Oscar Montero
 ### Script de instalación de Odoo, postgresql, Nginx, firewall i Certbot.
-## Versión 0.1
+#ODDO_VERSION="17.0"
+#POSTGRESQL_VERSION="13"
+#Python_version="3.10"
 #
 
 # Actualizar el sistema (Preferiblemente hacerlo a mano y reiniciar el servidor antes de ejecutar el script)
