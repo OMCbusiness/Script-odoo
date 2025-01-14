@@ -10,33 +10,6 @@
 sudo dnf update -y
 sudo dnf install epel-release -y
 
-# Creacion de los usuarios del sistema
-sudo useradd -m acarrillo
-sudo useradd -m amisis
-sudo useradd -m omontero
-sudo useradd -m jorovengua
-sudo useradd -m afornaguera
-sudo useradd -m jdelosmozos
-sudo useradd -m nasensi
-
-# Establecer la contraseña para los usuarios
-echo "AhD6areifeegh4Ua" | sudo passwd --stdin acarrillo
-echo "AhD6areifeegh4Ua" | sudo passwd --stdin amisis
-echo "AhD6areifeegh4Ua" | sudo passwd --stdin omontero
-echo "AhD6areifeegh4Ua" | sudo passwd --stdin jorovengua
-echo "AhD6areifeegh4Ua" | sudo passwd --stdin afornaguera
-echo "AhD6areifeegh4Ua" | sudo passwd --stdin jdelosmozos
-echo "AhD6areifeegh4Ua" | sudo passwd --stdin nasensi
-
-# Añadir los usuarios al grupo wheel para poder hacer sudo
-sudo usermod -aG wheel acarrillo
-sudo usermod -aG wheel amisis
-sudo usermod -aG wheel omontero
-sudo usermod -aG wheel jorovengua
-sudo usermod -aG wheel afornaguera
-sudo usermod -aG wheel jdelosmozos
-sudo usermod -aG wheel nasensi
-
 # Instalar NGINX y Certbot
 sudo dnf install -y certbot nginx
 
@@ -175,16 +148,16 @@ sudo systemctl start nginx
 
 # Instalar Odoo
 sudo dnf install -y git gcc wget nodejs libxslt-devel bzip2-devel openldap-devel libjpeg-devel freetype-devel postgresql-libs postgresql-devel gcc-c++ epel-release
-sudo dnf install -y python39 python39-devel
+sudo dnf install -y python3.10 python3.10-devel
 
 # Instalar conversor html a pdf
 sudo mkdir -p /opt/odoo/
-sudo wget -P /opt/odoo https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.almalinux8.x86_64.rpm
-sudo dnf localinstall -y /opt/odoo/wkhtmltox-0.12.6.1-2.almalinux8.x86_64.rpm
+sudo wget -P /opt/odoo https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
+sudo dnf localinstall -y /opt/odoo/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
 
 # Instalar PostgreSQL
 
-sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 sudo dnf -qy module disable postgresql
 sudo dnf install -y postgresql13-server postgresql13 postgresql13-devel --nobest --skip-broken
 
@@ -200,21 +173,21 @@ sudo su - postgres -c "createuser -s odoo"
 sudo useradd -m -U -r -d /opt/odoo -s /bin/bash odoo
 sudo chown -R odoo /opt/odoo
 sudo chgrp -R odoo /opt/odoo
-sudo su - odoo -c "git clone https://www.github.com/odoo/odoo --depth 1 --branch 16.0 /opt/odoo/odoo16"
-sudo su - odoo -c "python3.9 -m venv /opt/odoo/odoo16-venv"
-sudo su - odoo -c "source /opt/odoo/odoo16-venv/bin/activate && pip install --upgrade pip && pip install -r /opt/odoo/odoo16/requirements.txt && pip install psycopg2-binary && deactivate"
-sudo su - odoo -c "mkdir /opt/odoo/odoo16-custom-addons"
+sudo su - odoo -c "git clone https://www.github.com/odoo/odoo --depth 1 --branch 17.0 /opt/odoo/odoo17"
+sudo su - odoo -c "python3.10 -m venv /opt/odoo/odoo17-venv"
+sudo su - odoo -c "source /opt/odoo/odoo17-venv/bin/activate && pip install --upgrade pip && pip install -r /opt/odoo/odoo17/requirements.txt && pip install psycopg2-binary && deactivate"
+sudo su - odoo -c "mkdir /opt/odoo/odoo17-custom-addons"
 sudo su - odoo -c "exit"
 
 # Crear directorio de registro de Odoo y Odoo-desa
-sudo mkdir /var/log/odoo16
+sudo mkdir /var/log/odoo17
 
 # Creación de los registros
-sudo touch /var/log/odoo16/odoo-desa.log
-sudo touch /var/log/odoo16/odoo.log
+sudo touch /var/log/odoo17/odoo-desa.log
+sudo touch /var/log/odoo17/odoo.log
 
 # Dar permisos al usuario de odoo a los logs
-sudo chown -R odoo:odoo /var/log/odoo16/
+sudo chown -R odoo:odoo /var/log/odoo17/
 
 # Crear archivo de configuración de Odoo
 sudo sh -c 'cat <<EOF > /etc/odoo.conf
@@ -227,25 +200,25 @@ db_user = odoo
 db_password = False
 xmlrpc_port = 8069
 longpolling_port = 8072
-logfile = /var/log/odoo16/odoo.log
+logfile = /var/log/odoo17/odoo.log
 logrotate = True
-addons_path = /opt/odoo/odoo16/addons,/opt/odoo/odoo16-custom-addons
+addons_path = /opt/odoo/odoo17/addons,/opt/odoo/odoo17-custom-addons
 proxy_mode = True
 EOF'
 
 # Crear archivo de servicio systemd de Odoo
-sudo sh -c 'cat <<EOF > /etc/systemd/system/odoo16.service
+sudo sh -c 'cat <<EOF > /etc/systemd/system/odoo17.service
 [Unit]
-Description=Odoo16
+Description=Odoo17
 StartLimitIntervalSec=300
 StartLimitBurst=5
 [Service]
 Type=simple
-SyslogIdentifier=odoo16
+SyslogIdentifier=odoo17
 PermissionsStartOnly=true
 User=odoo
 Group=odoo
-ExecStart=/opt/odoo/odoo16-venv/bin/python3.9 /opt/odoo/odoo16/odoo-bin -c /etc/odoo.conf
+ExecStart=/opt/odoo/odoo17-venv/bin/python3.10 /opt/odoo/odoo17/odoo-bin -c /etc/odoo.conf
 StandardOutput=journal+console
 Restart=on-failure
 RestartSec=1s
@@ -257,8 +230,8 @@ EOF'
 sudo systemctl daemon-reload
 
 # Iniciar y habilitar el servicio Odoo16
-sudo systemctl start odoo16
-sudo systemctl enable odoo16
+sudo systemctl start odoo17
+sudo systemctl enable odoo17
 
 # Instalar Firewalld
 sudo dnf install -y firewalld
