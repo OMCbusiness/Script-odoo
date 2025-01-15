@@ -10,7 +10,7 @@
 
 # Actualizar el sistema (Preferiblemente hacerlo a mano y reiniciar el servidor antes de ejecutar el script)
 sudo dnf update -y
-sudo dnf install epel-release -y
+sudo dnf install epel-release dnf-plugins-core -y
 
 # Instalar NGINX y Certbot
 sudo dnf install -y certbot nginx
