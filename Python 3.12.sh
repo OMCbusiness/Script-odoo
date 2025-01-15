@@ -7,7 +7,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Variables
-PYTHON_VERSION="3.10.12"
+PYTHON_VERSION="3.12.0"
 PYTHON_SRC_DIR="/usr/src"
 PYTHON_INSTALL_DIR="/usr/local"
 PYTHON_URL="https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz"
@@ -35,14 +35,14 @@ make altinstall
 
 # Verificar la instalación
 echo "Verificando la instalación de Python ${PYTHON_VERSION}..."
-if ! [ -x "$(command -v ${PYTHON_INSTALL_DIR}/bin/python3.10)" ]; then
-    echo "Error: Python 3.10 no se instaló correctamente."
+if ! [ -x "${PYTHON_INSTALL_DIR}/bin/python3.12" ]; then
+    echo "Error: Python ${PYTHON_VERSION} no se instaló correctamente."
     exit 1
 fi
 
 # Configurar alternatives
-echo "Configurando Python 3.10 como predeterminado con alternatives..."
-alternatives --install /usr/bin/python python ${PYTHON_INSTALL_DIR}/bin/python3.10 1
+echo "Configurando Python 3.12 como predeterminado con alternatives..."
+alternatives --install /usr/bin/python python ${PYTHON_INSTALL_DIR}/bin/python3.12 1
 alternatives --config python
 
 # Verificar la versión predeterminada de Python
@@ -50,8 +50,8 @@ echo "Python predeterminado:"
 python --version
 
 # Configurar pip
-echo "Actualizando pip para Python 3.10..."
-${PYTHON_INSTALL_DIR}/bin/python3.10 -m ensurepip --upgrade
-${PYTHON_INSTALL_DIR}/bin/python3.10 -m pip install --upgrade pip
+echo "Actualizando pip para Python 3.12..."
+${PYTHON_INSTALL_DIR}/bin/python3.12 -m ensurepip --upgrade
+${PYTHON_INSTALL_DIR}/bin/python3.12 -m pip install --upgrade pip
 
 echo "¡Python ${PYTHON_VERSION} instalado y configurado con éxito!"
