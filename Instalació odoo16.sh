@@ -8,7 +8,7 @@
 
 # Actualizar el sistema (Preferiblemente hacerlo a mano y reiniciar el servidor antes de ejecutar el script)
 sudo dnf update -y
-sudo dnf install epel-release -y
+sudo dnf install epel-release dnf-plugins-core -y
 
 # Creacion de los usuarios del sistema
 sudo useradd -m acarrillo
