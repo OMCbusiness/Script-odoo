@@ -5,7 +5,7 @@
 ### Script de instalación de Odoo, postgresql, Nginx, firewall i Certbot.
 #ODDO_VERSION="17.0"
 #POSTGRESQL_VERSION="13"
-#Python_version="3.10"
+#Python_version="3.12"
 #
 
 # Actualizar el sistema (Preferiblemente hacerlo a mano y reiniciar el servidor antes de ejecutar el script)
@@ -177,7 +177,7 @@ sudo useradd -m -U -r -d /opt/odoo -s /bin/bash odoo
 sudo chown -R odoo /opt/odoo
 sudo chgrp -R odoo /opt/odoo
 sudo su - odoo -c "git clone https://www.github.com/odoo/odoo --depth 1 --branch 17.0 /opt/odoo/odoo17"
-sudo su - odoo -c "python3.10 -m venv /opt/odoo/odoo17-venv"
+sudo su - odoo -c "python3.12 -m venv /opt/odoo/odoo17-venv"
 sudo su - odoo -c "source /opt/odoo/odoo17-venv/bin/activate && pip install --upgrade pip && pip install -r /opt/odoo/odoo17/requirements.txt && pip install psycopg2-binary && deactivate"
 sudo su - odoo -c "mkdir /opt/odoo/odoo17-custom-addons"
 sudo su - odoo -c "exit"
@@ -221,7 +221,7 @@ SyslogIdentifier=odoo17
 PermissionsStartOnly=true
 User=odoo
 Group=odoo
-ExecStart=/opt/odoo/odoo17-venv/bin/python3.10 /opt/odoo/odoo17/odoo-bin -c /etc/odoo.conf
+ExecStart=/opt/odoo/odoo17-venv/bin/python3.12 /opt/odoo/odoo17/odoo-bin -c /etc/odoo.conf
 StandardOutput=journal+console
 Restart=on-failure
 RestartSec=1s
