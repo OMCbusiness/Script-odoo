@@ -260,3 +260,6 @@ sudo firewall-cmd --add-port=80/tcp && sudo firewall-cmd --add-port=443/tcp && s
 
 # Guardar la configuración del firewalld
 sudo firewall-cmd --runtime-to-permanent
+#Permisos
+sudo chown -R odoo /opt/odoo
+sudo chgrp -R odoo /opt/odoo
