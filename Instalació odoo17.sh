@@ -263,4 +263,3 @@ sudo firewall-cmd --runtime-to-permanent
 #Permisos
 sudo chown -R odoo:odoo /opt/odoo
 sudo chmod -R 755 /opt/odoo
-sudo chattr +a /opt/odoo
