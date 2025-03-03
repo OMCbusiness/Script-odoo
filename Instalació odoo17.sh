@@ -24,7 +24,7 @@ sudo mkdir -p /etc/nginx/sites-available && sudo mkdir -p /etc/nginx/sites-enabl
 sudo rm -f /etc/nginx/nginx.conf
 
 # Crear el nuevo archivo de configuración
-sudo sh -c 'cat <<EOF > /etc/nginx/nginx.conf
+sudo sh -c 'cat <<EOF | tee /etc/nginx/nginx.conf
 # For more information on configuration, see:
 # * Official English Documentation: http://nginx.org/en/docs/
 # * Official Russian Documentation: http://nginx.org/ru/docs/
@@ -60,7 +60,6 @@ http {
     include /etc/nginx/sites-enabled/*.conf;
 }
 EOF'
-
 
 # Crear el archivo dhparam.pem
 sudo mkdir -p /etc/cert/certs
