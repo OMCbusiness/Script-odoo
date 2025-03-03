@@ -152,7 +152,6 @@ sudo ln -s /etc/nginx/sites-available/odoo.conf /etc/nginx/sites-enabled/odoo.co
 
 # Iniciar el servicio de Nginx
 sudo systemctl enable nginx
-sudo systemctl start nginx
 
 # Instalar Odoo
 sudo dnf install -y git gcc wget nodejs libxslt-devel bzip2-devel openldap-devel libjpeg-devel freetype-devel postgresql-libs postgresql-devel gcc-c++ epel-release
