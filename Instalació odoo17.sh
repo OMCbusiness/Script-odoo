@@ -90,15 +90,14 @@ upstream odoo-chat {
    server 127.0.0.1:8072;
 }
 server {
-   listen 80;
-   server_name <nombre_dns_servidor>;
-   rewrite ^(.*) https://$host$1 permanent;
-}
-server {
-   listen 80;
-   server_name <nombre_dns_servidor>;
-   return 301 https://<nombre_dns_servidor>$request_uri;
-   limit_req zone=ip burst=60;
+    listen 80;
+    server_name <nombre_dns_servidor>;
+    
+    # Si deseas aplicar la limitación de peticiones
+    limit_req zone=ip burst=60;
+
+    # Redirige todas las peticiones a HTTPS
+    return 301 https://<nombre_dns_servidor>$request_uri;
 }
 server {
    listen 443 ssl http2;
