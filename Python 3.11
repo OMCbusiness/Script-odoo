@@ -1,0 +1,37 @@
+#!/bin/bash
+
+set -e  # Salir al primer error
+
+# Requisitos del sistema
+echo "Instalando dependencias necesarias..."
+sudo dnf groupinstall -y "Development Tools"
+sudo dnf install -y \
+    gcc openssl-devel bzip2-devel libffi-devel \
+    zlib-devel wget make tar xz-devel
+
+# Variables
+PYTHON_VERSION="3.11.9"
+PYTHON_TARBALL="Python-${PYTHON_VERSION}.tgz"
+PYTHON_SRC_DIR="Python-${PYTHON_VERSION}"
+INSTALL_PREFIX="/usr/local"
+
+# Descargar Python
+cd /usr/src
+sudo wget https://www.python.org/ftp/python/${PYTHON_VERSION}/${PYTHON_TARBALL}
+sudo tar xzf ${PYTHON_TARBALL}
+cd ${PYTHON_SRC_DIR}
+
+# Configurar y compilar
+echo "Compilando Python ${PYTHON_VERSION}..."
+sudo ./configure --enable-optimizations --prefix=${INSTALL_PREFIX}
+sudo make -j$(nproc)
+sudo make altinstall
+
+# Verificación
+echo "Verificando instalación..."
+python3.11 --version
+
+# Opción: hacer que python3 apunte a python3.11 (opcional)
+sudo alternatives --install /usr/bin/python3 python3 /usr/local/bin/python3.11 1
+
+echo "✅ Python ${PYTHON_VERSION} instalado correctamente en AlmaLinux 9."
