@@ -20,7 +20,7 @@ sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
 
 # Reemplazar nginx.conf
 sudo rm -f /etc/nginx/nginx.conf
-sudo sh -c 'cat <<EOF | tee /etc/nginx/nginx.conf
+sudo sh -c "cat << 'EOF' > /etc/nginx/nginx.conf
 user nginx;
 worker_processes auto;
 error_log /var/log/nginx/error.log;
@@ -46,7 +46,7 @@ http {
     include /etc/nginx/conf.d/*.conf;
     include /etc/nginx/sites-enabled/*.conf;
 }
-EOF'
+EOF"
 
 # Crear archivo dhparam.pem
 sudo mkdir -p /etc/cert/certs
