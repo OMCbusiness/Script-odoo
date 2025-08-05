@@ -144,6 +144,7 @@ EOF'
 # Activar el sitio de Odoo en NGINX
 sudo ln -s /etc/nginx/sites-available/odoo.conf /etc/nginx/sites-enabled/odoo.conf
 sudo systemctl enable nginx
+sudo setsebool -P nis_enabled 1
 
 # Dependencias del sistema
 sudo dnf install -y git gcc wget nodejs libxslt-devel bzip2-devel openldap-devel libjpeg-devel freetype-devel postgresql-libs postgresql-devel gcc-c++ epel-release
