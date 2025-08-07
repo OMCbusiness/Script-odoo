@@ -79,7 +79,7 @@ EOF'
 
 # Configuración del sitio Odoo en NGINX
 sudo sh -c 'cat <<EOF > /etc/nginx/sites-available/odoo.conf
-limit_req_zone $binary_remote_addr zone=ip:10m rate=3r/s;
+limit_req_zone \$binary_remote_addr zone=ip:10m rate=3r/s;
 
 upstream odoo {
     server 127.0.0.1:8069;
@@ -94,7 +94,7 @@ server {
     server_name <nombre_dns_servidor>;
 
     limit_req zone=ip burst=60;
-    return 301 https://$host$request_uri;
+    return 301 https://\$host\$request_uri;
 }
 
 server {
@@ -135,28 +135,25 @@ server {
     proxy_connect_timeout 720s;
     proxy_send_timeout 720s;
 
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
 
-    # Odoo main app
     location / {
         proxy_pass http://odoo;
         proxy_redirect off;
     }
 
-    # Websocket y longpolling combinados
     location ~* /(websocket|longpolling)/ {
         proxy_pass http://odoo-chat;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_read_timeout 3600s;
         proxy_send_timeout 3600s;
     }
 
-    # Archivos estáticos
     location ~* /web/static/ {
         proxy_cache_valid 200 90m;
         proxy_buffering on;
@@ -164,11 +161,9 @@ server {
         proxy_pass http://odoo;
     }
 
-    # Gzip
     gzip on;
     gzip_types text/css text/less text/plain text/xml application/xml application/json application/javascript;
 }
-
 EOF'
 
 # Activar el sitio de Odoo en NGINX
