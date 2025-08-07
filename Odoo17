@@ -290,6 +290,13 @@ sudo firewall-cmd --add-port=443/tcp --permanent
 sudo firewall-cmd --add-port=8888/tcp --permanent
 sudo firewall-cmd --reload
 
+#Memoria Swap
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+/swapfile none swap sw 0 0
+
 # Permisos finales
 sudo chown -R odoo:odoo /opt/odoo
 sudo chmod -R 755 /opt/odoo
