@@ -190,7 +190,7 @@ sudo su - odoo -c "mkdir /opt/odoo/odoo17-custom-addons"
 sudo mkdir /var/log/odoo17
 sudo touch /var/log/odoo17/odoo.log
 sudo chown -R odoo:odoo /var/log/odoo17
-sudo chmod -R 755 /var/log/odoo17
+sudo chmod -R 755 /var/log/odoo17/
 
 # Configuración Odoo
 sudo sh -c 'cat <<EOF > /etc/odoo.conf
