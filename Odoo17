@@ -9,7 +9,6 @@
 #
 
 # Actualizar el sistema
-sudo dnf update -y
 sudo dnf install epel-release dnf-plugins-core -y
 
 # Instalar NGINX y Certbot
