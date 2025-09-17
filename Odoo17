@@ -78,7 +78,7 @@ EOF'
 
 # Configuración del sitio Odoo en NGINX
 sudo sh -c 'cat <<EOF > /etc/nginx/sites-available/odoo.conf
-limit_req_zone \$binary_remote_addr zone=ip:10m rate=3r/s;
+limit_req_zone $binary_remote_addr zone=ip:10m rate=3r/s;
 
 upstream odoo {
     server 127.0.0.1:8069;
