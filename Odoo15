@@ -1,0 +1,255 @@
+#!/bin/bash
+
+#
+## SCRIPT ADAPTADO PARA Odoo 15 - Python 3.11.9
+### Instalación de Odoo, PostgreSQL, Nginx, Firewall y Certbot.
+# ODOO_VERSION="15.0"
+# POSTGRESQL_VERSION="13"
+# Python_version="3.11.9"
+#
+
+# -------------------------------
+# Actualizar sistema
+# -------------------------------
+sudo dnf install epel-release dnf-plugins-core -y
+
+# Instalar NGINX y Certbot
+sudo dnf install -y certbot nginx
+
+# Carpetas NGINX
+sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+
+# nginx.conf
+sudo rm -f /etc/nginx/nginx.conf
+sudo sh -c "cat << 'EOF' > /etc/nginx/nginx.conf
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format main '\$remote_addr - \$remote_user [\$time_local] "\$request" '
+        '\$status \$body_bytes_sent "\$http_referer" '
+        '"\$http_user_agent" "\$http_x_forwarded_for"';
+    access_log /var/log/nginx/access.log main;
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*.conf;
+}
+EOF"
+
+# dhparam.pem
+sudo mkdir -p /etc/cert/certs
+sudo sh -c 'cat <<EOF > /etc/cert/certs/dhparam.pem
+-----BEGIN DH PARAMETERS-----
+MIICCAKCAgEA3eINXN1xzhfnc7ku6Vuim65H0K+kjZD9yiKVLTBw41EYJVfRupOX
+ze05bzJFQlLipBiI9OAOWuiwLLkFeGxu3fFkOVfaviR5VBpPz6sQYwNL152Fs37y
+j74Y8orq01sgn+BB++S0CIQCh+AQWzSjyEnGuME93wH2NBMl52Ht9ZWmFSn6XvQM
+Tvx5vpBNk/4+i5NPZ6Ptc6jH1lofXh/0F1Yvg0yUyhYJzzwJUNrRju5V0y4qS3Y1
+HiU267HEd7T1zuc20Yl+/Rs8lULe6+kS77Y3+5u1hozen4WcM2rIxGEBCBCDjNf9
+km5wP1HHhnq/KZtlv0u68wEW73AO5zWzLRI2KaclS0X2c4zMkvM3q1BlE1ZSctq6
+lR08sR3zCENrpLqtRL4+0HWNxUEBAPjq/4jyacmbFsQ/59D9dCiJt/hLehG3O8P1
+OYRWqCMuOQT4T78wQQcTZHxguxdaUdxmgfNBP0SXfjeebApgpg8YhtgD1biGYFqc
+lCHvoHALCBwvQWgu5lCd+RuBqPXRTC27fy9xpo1js9+KzJpxIluqodDBGlX88VYJ
+ZkGswo0RIqst5AbE8w9Dq3lEmPH3Y68ViFzvbFtePFx9NdxvTjLhMNzvZvQGgWJI
+eeXdqk+M3lfk6Rmy+LrqUiru/fPbPNPLyAFBByTmYf8OMQA/cOiKrAMCAQI=
+-----END DH PARAMETERS-----
+EOF'
+
+# -------------------------------
+# Configuración NGINX para Odoo 15
+# -------------------------------
+sudo sh -c 'cat <<EOF > /etc/nginx/sites-available/odoo.conf
+limit_req_zone \$binary_remote_addr zone=ip:10m rate=3r/s;
+
+upstream odoo {
+    server 127.0.0.1:8069;
+}
+
+upstream odoo-chat {
+    server 127.0.0.1:8072;
+}
+
+server {
+    listen 80;
+    server_name <nombre_dns_servidor>;
+    limit_req zone=ip burst=60;
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name <nombre_dns_servidor>;
+
+    ssl_certificate /etc/letsencrypt/live/<nombre_dns_servidor>/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<nombre_dns_servidor>/privkey.pem;
+    ssl_dhparam /etc/cert/certs/dhparam.pem;
+
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:50m;
+    ssl_session_tickets off;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    access_log /var/log/nginx/odoo.access.log;
+    error_log /var/log/nginx/odoo.error.log;
+
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+
+    location / {
+        proxy_pass http://odoo;
+        proxy_redirect off;
+    }
+
+    location /websocket {
+        proxy_pass http://127.0.0.1:8072;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    gzip on;
+    gzip_types text/css text/xml application/json application/javascript;
+}
+EOF'
+
+sudo ln -s /etc/nginx/sites-available/odoo.conf /etc/nginx/sites-enabled/odoo.conf
+sudo systemctl enable nginx
+
+# -------------------------------
+# Dependencias del sistema
+# -------------------------------
+sudo dnf install -y git gcc wget nodejs libxslt-devel bzip2-devel openldap-devel \
+libjpeg-devel freetype-devel postgresql-libs postgresql-devel gcc-c++ epel-release \
+python3-devel libsasl2-devel openldap-devel
+
+# -------------------------------
+# Instalar Python 3.11.9
+# -------------------------------
+PYTHON_VERSION="3.11.9"
+cd /usr/src
+sudo dnf groupinstall "Development Tools" -y
+sudo dnf install -y gcc gcc-c++ make zlib-devel bzip2 bzip2-devel readline-devel \
+sqlite sqlite-devel openssl-devel xz xz-devel libffi-devel tar
+sudo wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz
+sudo tar xvf Python-${PYTHON_VERSION}.tgz
+cd Python-${PYTHON_VERSION}
+sudo ./configure --enable-optimizations --prefix=/usr/local
+sudo make -j$(nproc)
+sudo make altinstall
+cd ~
+
+# -------------------------------
+# wkhtmltopdf
+# -------------------------------
+sudo mkdir -p /opt/odoo/
+sudo wget -P /opt/odoo https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
+sudo dnf localinstall -y /opt/odoo/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
+
+# -------------------------------
+# PostgreSQL 13
+# -------------------------------
+sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+sudo dnf -qy module disable postgresql
+sudo dnf install -y postgresql13-server postgresql13 postgresql13-devel --nobest
+sudo /usr/pgsql-13/bin/postgresql-13-setup initdb
+sudo systemctl start postgresql-13
+sudo systemctl enable postgresql-13
+sudo su - postgres -c "createuser -s odoo"
+
+# -------------------------------
+# Crear usuario Odoo y entorno
+# -------------------------------
+sudo useradd -m -U -r -d /opt/odoo -s /bin/bash odoo
+sudo chown -R odoo /opt/odoo
+
+sudo su - odoo -c "git clone https://www.github.com/odoo/odoo --depth 1 --branch 15.0 /opt/odoo/odoo15"
+
+sudo su - odoo -c "/usr/local/bin/python3.11 -m venv /opt/odoo/odoo15-venv"
+sudo su - odoo -c "source /opt/odoo/odoo15-venv/bin/activate && pip install --upgrade pip && pip install -r /opt/odoo/odoo15/requirements.txt && pip install psycopg2-binary && deactivate"
+
+sudo su - odoo -c "mkdir /opt/odoo/odoo15-custom-addons"
+
+# -------------------------------
+# Logs
+# -------------------------------
+sudo mkdir /var/log/odoo15
+sudo touch /var/log/odoo15/odoo.log
+sudo chown -R odoo:odoo /var/log/odoo15
+
+# -------------------------------
+# Configuración Odoo 15
+# -------------------------------
+sudo sh -c 'cat <<EOF > /etc/odoo.conf
+[options]
+admin_passwd = CambiaEstaClave
+db_user = odoo
+xmlrpc_port = 8069
+longpolling_port = 8072
+logfile = /var/log/odoo15/odoo.log
+addons_path = /opt/odoo/odoo15/addons,/opt/odoo/odoo15-custom-addons
+proxy_mode = True
+workers = 2
+limit_memory_soft = 1073741824
+limit_memory_hard = 2147483648
+EOF'
+
+# -------------------------------
+# Servicio systemd
+# -------------------------------
+sudo sh -c 'cat <<EOF > /etc/systemd/system/odoo15.service
+[Unit]
+Description=Odoo15
+[Service]
+User=odoo
+Group=odoo
+ExecStart=/opt/odoo/odoo15-venv/bin/python3.11 /opt/odoo/odoo15/odoo-bin -c /etc/odoo.conf
+Restart=always
+[Install]
+WantedBy=multi-user.target
+EOF'
+
+sudo systemctl daemon-reload
+sudo systemctl start odoo15
+sudo systemctl enable odoo15
+
+# -------------------------------
+# Firewall
+# -------------------------------
+sudo dnf install -y firewalld
+sudo systemctl start firewalld
+sudo systemctl enable firewalld
+sudo firewall-cmd --add-port=80/tcp --permanent
+sudo firewall-cmd --add-port=443/tcp --permanent
+sudo firewall-cmd --reload
+
+# -------------------------------
+# Swap
+# -------------------------------
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+sudo chown -R odoo:odoo /opt/odoo
+sudo chmod -R 755 /opt/odoo
