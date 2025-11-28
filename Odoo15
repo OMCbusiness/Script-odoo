@@ -1,11 +1,10 @@
 #!/bin/bash
 
 #
-## SCRIPT ADAPTADO PARA Odoo 15 - Python 3.11.9
+## SCRIPT ADAPTADO PARA Odoo 15 - Python 3.8.x
 ### Instalación de Odoo, PostgreSQL, Nginx, Firewall y Certbot.
 # ODOO_VERSION="15.0"
 # POSTGRESQL_VERSION="13"
-# Python_version="3.11.9"
 #
 
 # -------------------------------
@@ -143,20 +142,9 @@ libjpeg-devel freetype-devel postgresql-libs postgresql-devel gcc-c++ epel-relea
 python3-devel libsasl2-devel openldap-devel
 
 # -------------------------------
-# Instalar Python 3.11.9
+# Instalar Python 3.8
 # -------------------------------
-PYTHON_VERSION="3.11.9"
-cd /usr/src
-sudo dnf groupinstall "Development Tools" -y
-sudo dnf install -y gcc gcc-c++ make zlib-devel bzip2 bzip2-devel readline-devel \
-sqlite sqlite-devel openssl-devel xz xz-devel libffi-devel tar
-sudo wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz
-sudo tar xvf Python-${PYTHON_VERSION}.tgz
-cd Python-${PYTHON_VERSION}
-sudo ./configure --enable-optimizations --prefix=/usr/local
-sudo make -j$(nproc)
-sudo make altinstall
-cd ~
+sudo dnf install -y python38 python38-devel python38-pip
 
 # -------------------------------
 # wkhtmltopdf
@@ -184,7 +172,7 @@ sudo chown -R odoo /opt/odoo
 
 sudo su - odoo -c "git clone https://www.github.com/odoo/odoo --depth 1 --branch 15.0 /opt/odoo/odoo15"
 
-sudo su - odoo -c "/usr/local/bin/python3.11 -m venv /opt/odoo/odoo15-venv"
+sudo su - odoo -c "python3.8 -m venv /opt/odoo/odoo15-venv"
 sudo su - odoo -c "source /opt/odoo/odoo15-venv/bin/activate && pip install --upgrade pip && pip install -r /opt/odoo/odoo15/requirements.txt && pip install psycopg2-binary && deactivate"
 
 sudo su - odoo -c "mkdir /opt/odoo/odoo15-custom-addons"
@@ -222,7 +210,7 @@ Description=Odoo15
 [Service]
 User=odoo
 Group=odoo
-ExecStart=/opt/odoo/odoo15-venv/bin/python3.11 /opt/odoo/odoo15/odoo-bin -c /etc/odoo.conf
+ExecStart=/opt/odoo/odoo15-venv/bin/python3.8 /opt/odoo/odoo15/odoo-bin -c /etc/odoo.conf
 Restart=always
 [Install]
 WantedBy=multi-user.target
