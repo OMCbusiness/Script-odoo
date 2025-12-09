@@ -247,9 +247,9 @@ logfile = /var/log/odoo17/odoo.log
 logrotate = True
 addons_path = /opt/odoo/odoo17/addons,/opt/odoo/odoo17-custom-addons
 proxy_mode = True
-workers = 2
-limit_memory_soft = 1174405120
-limit_memory_hard = 1395864371
+workers = 3
+limit_memory_soft = 1374405120
+limit_memory_hard = 1595864371
 limit_time_cpu = 60
 limit_time_real = 120
 max_cron_threads = 1
@@ -299,3 +299,4 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 # Permisos finales
 sudo chown -R odoo:odoo /opt/odoo
 sudo chmod -R 755 /opt/odoo
+sudo reboot
