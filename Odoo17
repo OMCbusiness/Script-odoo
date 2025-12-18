@@ -103,7 +103,10 @@ server {
     # SSL
     ssl_certificate /etc/letsencrypt/live/<nombre_dns_servidor>/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/<nombre_dns_servidor>/privkey.pem;
-    ssl_dhparam /etc/cert/certs/dhparam.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/<nombre_dns_servidor>/chain.pem;
+
+    ssl_stapling on;
+    ssl_stapling_verify on;
 
     ssl_session_timeout 1d;
     ssl_session_cache shared:SSL:50m;
@@ -113,14 +116,9 @@ server {
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
 
-    ssl_stapling on;
-    ssl_stapling_verify on;
-    ssl_trusted_certificate /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem;
-
     add_header Strict-Transport-Security "max-age=15768000" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "no-referrer-when-downgrade" always;
-    add_header Content-Security-Policy "frame-ancestors 'self'" always;
 
     resolver 8.8.8.8 8.8.4.4;
 
@@ -138,42 +136,50 @@ server {
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto \$scheme;
 
+    # Odoo principal
     location / {
         proxy_pass http://odoo;
         proxy_redirect off;
     }
 
+    # Chat Odoo - WebSocket
     location /websocket {
-        proxy_pass http://127.0.0.1:8072;
+        proxy_pass http://odoo-chat;
         proxy_http_version 1.1;
+
         proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Connection "Upgrade";
+
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_read_timeout 3600s;
-        proxy_send_timeout 3600s;
+
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
     }
 
+    # Longpolling (fallback)
     location /longpolling/ {
-        proxy_pass http://127.0.0.1:8072;
+        proxy_pass http://odoo-chat;
         proxy_http_version 1.1;
+
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
+
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+
         proxy_read_timeout 3600s;
         proxy_send_timeout 3600s;
     }
 
+    # Assets sin cache
     location ~* /web/static/ {
-        proxy_cache_valid 200 90m;
-        proxy_buffering on;
-        expires 10d;
         proxy_pass http://odoo;
+        add_header Cache-Control "no-store";
     }
 
     gzip on;
