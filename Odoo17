@@ -104,6 +104,7 @@ server {
     ssl_certificate /etc/letsencrypt/live/<nombre_dns_servidor>/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/<nombre_dns_servidor>/privkey.pem;
     ssl_trusted_certificate /etc/letsencrypt/live/<nombre_dns_servidor>/chain.pem;
+    ssl_dhparam /etc/cert/certs/dhparam.pem;
 
     ssl_stapling on;
     ssl_stapling_verify on;
