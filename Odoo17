@@ -180,7 +180,8 @@ server {
     # Assets sin cache
     location ~* /web/static/ {
         proxy_pass http://odoo;
-        add_header Cache-Control "no-store";
+        expires 30d;
+        add_header Cache-Control "public";
     }
 
     gzip on;
