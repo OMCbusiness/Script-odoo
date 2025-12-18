@@ -118,7 +118,6 @@ server {
     ssl_trusted_certificate /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem;
 
     add_header Strict-Transport-Security "max-age=15768000" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "no-referrer-when-downgrade" always;
     add_header Content-Security-Policy "frame-ancestors 'self'" always;
