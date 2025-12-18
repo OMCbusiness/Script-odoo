@@ -230,7 +230,8 @@ sudo useradd -m -U -r -d /opt/odoo -s /bin/bash odoo
 sudo chown -R odoo /opt/odoo
 sudo su - odoo -c "git clone https://www.github.com/odoo/odoo --depth 1 --branch 17.0 /opt/odoo/odoo17"
 sudo su - odoo -c "/usr/local/bin/python3.11 -m venv /opt/odoo/odoo17-venv"
-sudo su - odoo -c "source /opt/odoo/odoo17-venv/bin/activate && pip install --upgrade pip && pip install -r /opt/odoo/odoo17/requirements.txt && pip install psycopg2-binary && pip install google_auth && deactivate"
+sudo su - odoo -c "
+source /opt/odoo/odoo17-venv/bin/activate && pip install --upgrade pip && pip install 'setuptools<81' wheel && pip install 'gevent>=22.10,<24' 'greenlet>=2.0,<3' && pip install -r /opt/odoo/odoo17/requirements.txt && pip install psycopg2-binary google_auth && deactivate"
 sudo su - odoo -c "mkdir /opt/odoo/odoo17-custom-addons"
 
 # Logs
