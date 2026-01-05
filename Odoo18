@@ -1,20 +1,21 @@
 #!/bin/bash
 
 #
-## SCRIPT HECHO POR Oscar Montero
+## SCRIPT HECHO POR Oscar Montero (actualizado)
 ### Instalación Odoo 18 – AlmaLinux 9 – Producción
 #
 
-# Sistema base
+# 1️⃣ Repos y sistema base
 sudo dnf install -y epel-release dnf-plugins-core
+sudo dnf config-manager --set-enabled crb
+sudo dnf clean all
+sudo dnf makecache
 
-# NGINX + Certbot
+# 2️⃣ NGINX + Certbot
 sudo dnf install -y nginx certbot
-
-# NGINX estructura Debian-style (se mantiene)
 sudo mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
 
-# nginx.conf
+# 3️⃣ nginx.conf
 sudo rm -f /etc/nginx/nginx.conf
 sudo sh -c "cat << 'EOF' > /etc/nginx/nginx.conf
 user nginx;
@@ -24,14 +25,12 @@ pid /run/nginx.pid;
 
 include /usr/share/nginx/modules/*.conf;
 
-events {
-    worker_connections 1024;
-}
+events { worker_connections 1024; }
 
 http {
     log_format main '\$remote_addr - \$remote_user [\$time_local] \"\$request\" '
-        '\$status \$body_bytes_sent \"\$http_referer\" '
-        '\"\$http_user_agent\" \"\$http_x_forwarded_for\"';
+                    '\$status \$body_bytes_sent \"\$http_referer\" '
+                    '\"\$http_user_agent\" \"\$http_x_forwarded_for\"';
     access_log /var/log/nginx/access.log main;
 
     sendfile on;
@@ -47,22 +46,16 @@ http {
 }
 EOF"
 
-# Configuración del sitio Odoo en NGINX
+# 4️⃣ Configuración sitio Odoo en NGINX
 sudo sh -c 'cat <<EOF > /etc/nginx/sites-available/odoo.conf
 limit_req_zone \$binary_remote_addr zone=ip:10m rate=3r/s;
 
-upstream odoo {
-    server 127.0.0.1:8069;
-}
-
-upstream odoo-chat {
-    server 127.0.0.1:8072;
-}
+upstream odoo { server 127.0.0.1:8069; }
+upstream odoo-chat { server 127.0.0.1:8072; }
 
 server {
     listen 80;
     server_name <nombre_dns_servidor>;
-
     limit_req zone=ip burst=60;
     return 301 https://\$host\$request_uri;
 }
@@ -71,7 +64,6 @@ server {
     listen 443 ssl http2;
     server_name <nombre_dns_servidor>;
 
-    # SSL
     ssl_certificate /etc/letsencrypt/live/<nombre_dns_servidor>/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/<nombre_dns_servidor>/privkey.pem;
     ssl_trusted_certificate /etc/letsencrypt/live/<nombre_dns_servidor>/chain.pem;
@@ -108,47 +100,37 @@ server {
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto \$scheme;
 
-    # Odoo principal
     location / {
         proxy_pass http://odoo;
         proxy_redirect off;
     }
 
-    # Chat Odoo - WebSocket
     location /websocket {
         proxy_pass http://127.0.0.1:8072;
         proxy_http_version 1.1;
-
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
-
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-
         proxy_read_timeout 86400s;
         proxy_send_timeout 86400s;
     }
 
-    # Longpolling (fallback)
     location /longpolling/ {
         proxy_pass http://127.0.0.1:8072;
         proxy_http_version 1.1;
-
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
-
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-
         proxy_read_timeout 3600s;
         proxy_send_timeout 3600s;
     }
 
-    # Assets sin cache
     location ~* /web/static/ {
         proxy_pass http://odoo;
         expires 30d;
@@ -160,39 +142,35 @@ server {
 }
 EOF'
 
-# Activar el sitio de Odoo en NGINX
 sudo ln -s /etc/nginx/sites-available/odoo.conf /etc/nginx/sites-enabled/odoo.conf
 sudo systemctl enable nginx
 sudo setsebool -P nis_enabled 1
 
-# Dependencias sistema
+# 5️⃣ Dependencias del sistema + Python 3.11
 sudo dnf install -y \
-git gcc wget \
-libxslt-devel bzip2-devel openldap-devel \
-libjpeg-devel freetype-devel \
-postgresql-libs postgresql-devel gcc-c++ \
-python3.11 python3.11-devel \
-libsasl2-devel
+  python3.11 python3.11-devel python3.11-pip \
+  gcc gcc-c++ make libffi-devel zlib-devel bzip2-devel \
+  git wget libxslt-devel openldap-devel \
+  libjpeg-devel freetype-devel \
+  postgresql postgresql-server postgresql-devel \
+  cyrus-sasl-devel
 
-# wkhtmltopdf
+# 6️⃣ Inicializar PostgreSQL 13
+sudo postgresql-setup --initdb
+sudo systemctl enable --now postgresql
+sudo su - postgres -c "createuser -s odoo"
+
+# 7️⃣ wkhtmltopdf
 sudo mkdir -p /opt/odoo
 sudo wget -P /opt/odoo \
 https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
 sudo dnf localinstall -y /opt/odoo/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
 
-# PostgreSQL 13 (sin tuning)
-sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-sudo dnf -qy module disable postgresql
-sudo dnf install -y postgresql13-server postgresql13 postgresql13-devel --nobest
-sudo /usr/pgsql-13/bin/postgresql-13-setup initdb
-sudo systemctl enable --now postgresql-13
-sudo su - postgres -c "createuser -s odoo"
-
-# Usuario Odoo
+# 8️⃣ Usuario Odoo
 sudo useradd -m -U -r -d /opt/odoo -s /bin/bash odoo
 sudo chown -R odoo:odoo /opt/odoo
 
-# Odoo 18
+# 9️⃣ Odoo 18 + virtualenv
 sudo su - odoo -c "git clone https://github.com/odoo/odoo --depth 1 --branch 18.0 /opt/odoo/odoo18"
 sudo su - odoo -c "python3.11 -m venv /opt/odoo/odoo18-venv"
 sudo su - odoo -c "source /opt/odoo/odoo18-venv/bin/activate && \
@@ -202,13 +180,13 @@ pip install psycopg2-binary google_auth && deactivate"
 
 sudo su - odoo -c "mkdir /opt/odoo/odoo18-custom-addons"
 
-# Logs
+# 🔟 Logs
 sudo mkdir /var/log/odoo18
 sudo touch /var/log/odoo18/odoo.log
 sudo chown -R odoo:odoo /var/log/odoo18
 sudo chmod -R 755 /var/log/odoo18
 
-# Configuración Odoo (OPTIMIZADA 8GB)
+# 11️⃣ Configuración Odoo
 sudo sh -c 'cat <<EOF > /etc/odoo.conf
 [options]
 admin_passwd = Iedoo8oo ohPii4ai
@@ -234,7 +212,7 @@ limit_time_cpu = 60
 limit_time_real = 120
 EOF'
 
-# systemd
+# 12️⃣ systemd Odoo
 sudo sh -c 'cat <<EOF > /etc/systemd/system/odoo18.service
 [Unit]
 Description=Odoo18
@@ -256,19 +234,19 @@ EOF'
 sudo systemctl daemon-reload
 sudo systemctl enable --now odoo18
 
-# Firewall
+# 13️⃣ Firewall
 sudo dnf install -y firewalld
 sudo systemctl enable --now firewalld
 sudo firewall-cmd --add-port=80/tcp --permanent
 sudo firewall-cmd --add-port=443/tcp --permanent
 sudo firewall-cmd --reload
 
-# Swap 2GB (se mantiene)
+# 14️⃣ Swap 2GB
 sudo fallocate -l 2G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
-# Reboot automático (se mantiene)
+# 15️⃣ Reboot final
 sudo reboot
