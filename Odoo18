@@ -203,7 +203,7 @@ logrotate = True
 addons_path = /opt/odoo/odoo18/addons,/opt/odoo/odoo18-custom-addons
 proxy_mode = True
 
-workers = 7
+workers = 4
 max_cron_threads = 1
 
 limit_memory_soft = 2147483648
