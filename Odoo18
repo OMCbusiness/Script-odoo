@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-## SCRIPT HECHO POR Oscar Montero - Producción Odoo 18
+## SCRIPT HECHO POR Oscar Montero - Odoo 18 Producción AlmaLinux
 ### Instalación de Odoo, PostgreSQL, Nginx, Firewall y Certbot
 # ODOO_VERSION="18.0"
 # POSTGRESQL_VERSION="15"
@@ -49,9 +49,11 @@ http {
     default_type application/octet-stream;
 
     include /etc/nginx/conf.d/*.conf;
-    include /etc/nginx/sites-enabled/*.conf;
 }
 EOF"
+
+# Habilitar sites-enabled en AlmaLinux
+sudo sh -c 'echo "include /etc/nginx/sites-enabled/*.conf;" > /etc/nginx/conf.d/sites-enabled.conf'
 
 # Crear archivo dhparam.pem
 sudo mkdir -p /etc/cert/certs
@@ -122,8 +124,7 @@ sudo dnf install -y \
 git gcc wget nodejs \
 libxslt-devel bzip2-devel openldap-devel \
 libjpeg-devel freetype-devel \
-libsasl2-devel python3-devel \
-postgresql-devel gcc-c++
+libsasl2-devel python3-devel gcc-c++
 
 # Instalar Python 3.12
 PYTHON_VERSION="3.12.1"
@@ -136,6 +137,7 @@ cd Python-${PYTHON_VERSION}
 sudo ./configure --enable-optimizations --prefix=/usr/local
 sudo make -j$(nproc)
 sudo make altinstall
+sudo ln -sf /usr/local/bin/python3.12 /usr/bin/python3.12
 cd ~
 
 # wkhtmltopdf
@@ -146,18 +148,18 @@ sudo dnf localinstall -y /opt/odoo/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
 # PostgreSQL 15
 sudo dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 sudo dnf -qy module disable postgresql
-sudo dnf install -y postgresql15-server postgresql15 postgresql15-devel
+sudo dnf install -y postgresql15-server postgresql15
 sudo /usr/pgsql-15/bin/postgresql-15-setup initdb
 sudo systemctl enable --now postgresql-15
 sudo su - postgres -c "createuser -s odoo"
 
 # Usuario Odoo
-sudo useradd -m -U -r -d /opt/odoo -s /bin/bash odoo
+sudo useradd -m -U -r -d /opt/odoo -s /bin/bash odoo || true
 sudo chown -R odoo:odoo /opt/odoo
 
 # Odoo 18
 sudo su - odoo -c "git clone https://www.github.com/odoo/odoo --depth 1 --branch 18.0 /opt/odoo/odoo18"
-sudo su - odoo -c "/usr/local/bin/python3.12 -m venv /opt/odoo/odoo18-venv"
+sudo su - odoo -c "/usr/bin/python3.12 -m venv /opt/odoo/odoo18-venv"
 sudo su - odoo -c "source /opt/odoo/odoo18-venv/bin/activate && pip install --upgrade pip setuptools wheel && pip install -r /opt/odoo/odoo18/requirements.txt && deactivate"
 sudo su - odoo -c "mkdir /opt/odoo/odoo18-custom-addons"
 
@@ -167,7 +169,7 @@ sudo touch /var/log/odoo18/odoo.log
 sudo chown -R odoo:odoo /var/log/odoo18
 sudo chmod -R 750 /var/log/odoo18
 
-# Configuración Odoo (OPTIMIZADA 4C / 8GB)
+# Configuración Odoo (4 CORES / 8GB RAM)
 sudo sh -c 'cat <<EOF > /etc/odoo.conf
 [options]
 admin_passwd = CambiarPasswordSeguro
@@ -207,7 +209,7 @@ After=network.target postgresql-15.service
 Type=simple
 User=odoo
 Group=odoo
-ExecStart=/opt/odoo/odoo18-venv/bin/python3.12 /opt/odoo/odoo18/odoo-bin -c /etc/odoo.conf
+ExecStart=/opt/odoo/odoo18-venv/bin/python /opt/odoo/odoo18/odoo-bin -c /etc/odoo.conf
 Restart=on-failure
 LimitNOFILE=65536
 
