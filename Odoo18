@@ -175,7 +175,9 @@ sudo su - odoo -c "python3.11 -m venv /opt/odoo/odoo18-venv"
 sudo su - odoo -c "source /opt/odoo/odoo18-venv/bin/activate && \
 pip install --upgrade pip setuptools wheel && \
 pip install -r /opt/odoo/odoo18/requirements.txt && \
-pip install psycopg2-binary google_auth && deactivate"
+pip install psycopg2-binary google_auth && \
+pip install phonenumbers lxml requests cryptography pyOpenSSL xlrd openpyxl num2words babel && \
+deactivate"
 
 sudo su - odoo -c "mkdir /opt/odoo/odoo18-custom-addons"
 
