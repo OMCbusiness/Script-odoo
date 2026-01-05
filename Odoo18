@@ -47,6 +47,124 @@ http {
 }
 EOF"
 
+# Configuración del sitio Odoo en NGINX
+sudo sh -c 'cat <<EOF > /etc/nginx/sites-available/odoo.conf
+limit_req_zone \$binary_remote_addr zone=ip:10m rate=3r/s;
+
+upstream odoo {
+    server 127.0.0.1:8069;
+}
+
+upstream odoo-chat {
+    server 127.0.0.1:8072;
+}
+
+server {
+    listen 80;
+    server_name <nombre_dns_servidor>;
+
+    limit_req zone=ip burst=60;
+    return 301 https://\$host\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name <nombre_dns_servidor>;
+
+    # SSL
+    ssl_certificate /etc/letsencrypt/live/<nombre_dns_servidor>/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<nombre_dns_servidor>/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/<nombre_dns_servidor>/chain.pem;
+    ssl_dhparam /etc/cert/certs/dhparam.pem;
+
+    ssl_stapling on;
+    ssl_stapling_verify on;
+
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:50m;
+    ssl_session_tickets off;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    add_header Strict-Transport-Security "max-age=15768000" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    resolver 8.8.8.8 8.8.4.4;
+
+    access_log /var/log/nginx/odoo.access.log;
+    error_log /var/log/nginx/odoo.error.log;
+
+    client_max_body_size 256M;
+
+    proxy_read_timeout 720s;
+    proxy_connect_timeout 720s;
+    proxy_send_timeout 720s;
+
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+
+    # Odoo principal
+    location / {
+        proxy_pass http://odoo;
+        proxy_redirect off;
+    }
+
+    # Chat Odoo - WebSocket
+    location /websocket {
+        proxy_pass http://127.0.0.1:8072;
+        proxy_http_version 1.1;
+
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+    }
+
+    # Longpolling (fallback)
+    location /longpolling/ {
+        proxy_pass http://127.0.0.1:8072;
+        proxy_http_version 1.1;
+
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # Assets sin cache
+    location ~* /web/static/ {
+        proxy_pass http://odoo;
+        expires 30d;
+        add_header Cache-Control "public";
+    }
+
+    gzip on;
+    gzip_types text/css text/less text/plain text/xml application/xml application/json application/javascript;
+}
+EOF'
+
+# Activar el sitio de Odoo en NGINX
+sudo ln -s /etc/nginx/sites-available/odoo.conf /etc/nginx/sites-enabled/odoo.conf
+sudo systemctl enable nginx
+sudo setsebool -P nis_enabled 1
+
 # Dependencias sistema
 sudo dnf install -y \
 git gcc wget \
