@@ -178,7 +178,6 @@ pip install -r /opt/odoo/odoo18/requirements.txt && \
 pip install 'urllib3<2' cryptography==41.0.7 pyOpenSSL==23.2.0 && \
 pip install psycopg2-binary google_auth phonenumbers xlrd openpyxl num2words babel && \
 deactivate"
-
 sudo su - odoo -c "mkdir /opt/odoo/odoo18-custom-addons"
 
 # 🔟 Logs
