@@ -172,8 +172,7 @@ sudo chown -R odoo:odoo /opt/odoo
 # 9️⃣ Odoo 18 + virtualenv
 sudo su - odoo -c "git clone https://github.com/odoo/odoo --depth 1 --branch 18.0 /opt/odoo/odoo18"
 sudo su - odoo -c "python3.11 -m venv /opt/odoo/odoo18-venv"
-sudo su - odoo -c "
-source /opt/odoo/odoo18-venv/bin/activate && \
+sudo su - odoo -c "source /opt/odoo/odoo18-venv/bin/activate && \
 pip install --upgrade pip setuptools wheel && \
 pip install -r /opt/odoo/odoo18/requirements.txt && \
 pip install 'urllib3<2' cryptography==41.0.7 pyOpenSSL==23.2.0 && \
