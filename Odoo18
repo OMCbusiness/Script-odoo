@@ -173,9 +173,11 @@ sudo chown -R odoo:odoo /opt/odoo
 sudo su - odoo -c "git clone https://github.com/odoo/odoo --depth 1 --branch 18.0 /opt/odoo/odoo18"
 sudo su - odoo -c "python3.11 -m venv /opt/odoo/odoo18-venv"
 sudo su - odoo -c "source /opt/odoo/odoo18-venv/bin/activate && \
-pip install wheel && \
+pip install --upgrade pip setuptools wheel && \
 pip install -r /opt/odoo/odoo18/requirements.txt && \
-pip install psycopg2-binary google_auth phonenumbers xlrd openpyxl num2words babel && \ deactivate"
+pip install psycopg2-binary google_auth phonenumbers xlrd openpyxl num2words babel && \
+pip install --upgrade --force-reinstall cryptography==41.0.7 urllib3==2.6.3 pyopenssl==23.2.0 && \ deactivate"
+
 sudo su - odoo -c "mkdir /opt/odoo/odoo18-custom-addons"
 
 # 🔟 Logs
