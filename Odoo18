@@ -168,7 +168,6 @@ sudo dnf localinstall -y /opt/odoo/wkhtmltox-0.12.6.1-2.almalinux9.x86_64.rpm
 # 8️⃣ Usuario Odoo
 sudo useradd -m -U -r -d /opt/odoo -s /bin/bash odoo
 sudo chown -R odoo:odoo /opt/odoo
-sudo dnf config-manager --set-enabled crb
 
 # 9️⃣ Odoo 18 + virtualenv
 sudo su - odoo -c "git clone https://github.com/odoo/odoo --depth 1 --branch 18.0 /opt/odoo/odoo18"
