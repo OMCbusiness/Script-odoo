@@ -6,7 +6,6 @@
 #
 
 # 1️⃣ Repos y sistema base
-sudo dnf upgrade -y
 sudo dnf install -y epel-release dnf-plugins-core
 sudo dnf config-manager --set-enabled crb
 sudo dnf clean all
