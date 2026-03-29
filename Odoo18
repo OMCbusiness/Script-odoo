@@ -41,7 +41,7 @@ sudo mkdir -p /opt/odoo
 sudo chown -R odoo:odoo /opt/odoo
 
 # Clonar Odoo
-sudo -u odoo git clone https://www.github.com/odoo/odoo --depth 1 --branch 18.0 /opt/odoo/odoo17
+sudo -u odoo git clone https://www.github.com/odoo/odoo --depth 1 --branch 18.0 /opt/odoo/odoo18
 
 # Crear entorno virtual
 sudo -u odoo /usr/local/bin/python3.12 -m venv /opt/odoo/odoo18-venv
