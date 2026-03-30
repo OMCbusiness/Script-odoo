@@ -192,7 +192,7 @@ server {
 }
 EOF
 
-sudo ln -s /etc/nginx/sites-available/odoo /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/odoo.conf /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
 
