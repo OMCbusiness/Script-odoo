@@ -171,12 +171,12 @@ sudo chown -R odoo:odoo /opt/odoo
 
 # 9️⃣ Odoo 14 + virtualenv
 sudo su - odoo -c "git clone https://github.com/odoo/odoo --depth 1 --branch 14.0 /opt/odoo/odoo14"
-sudo su - odoo -c "python3.9 -m venv /opt/odoo/odoo14-venv"
-sudo su - odoo -c "source /opt/odoo/odoo14-venv/bin/activate && \
-pip install --upgrade pip setuptools wheel && \
-pip install -r /opt/odoo/odoo14/requirements.txt && \
-pip install psycopg2-binary google_auth phonenumbers xlrd openpyxl num2words babel && \
-deactivate"
+sudo su - odoo -c "python3.9 -m venv --copies /opt/odoo/odoo14-venv"
+sudo su - odoo -c "/opt/odoo/odoo14-venv/bin/python3.9 -m pip install --no-cache-dir --upgrade pip==23.3.2"
+sudo su - odoo -c "/opt/odoo/odoo14-venv/bin/python3.9 -m pip install --no-cache-dir 'setuptools==67.8.0' wheel"
+sudo su - odoo -c "/opt/odoo/odoo14-venv/bin/python3.9 -m pip install --no-cache-dir 'zope.interface==5.5.2' 'zope.event==4.6'"
+sudo su - odoo -c "/opt/odoo/odoo14-venv/bin/python3.9 -m pip install --no-cache-dir -r /opt/odoo/odoo14/requirements.txt"
+sudo su - odoo -c "/opt/odoo/odoo14-venv/bin/python3.9 -m pip install --no-cache-dir psycopg2-binary"
 
 sudo su - odoo -c "mkdir /opt/odoo/odoo14-custom-addons"
 
